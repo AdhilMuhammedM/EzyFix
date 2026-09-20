@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #F8F8F6;
+    color: #072339;
+    font-family: 'Inter', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  h1, h2, h3, h4, .font-serif {
+    font-family: 'Lora', Georgia, serif;
+  }
+}
+
+/* App container constrained to 480px max on desktop, centered */
+.app-container {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #F8F8F6;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 25px -5px rgba(0, 0, 0, 0.05);
+  position: relative;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #E6E6E0;
+  border-radius: 4px;
+}
