@@ -1,7 +1,7 @@
 import React from 'react';
-import { CheckCircle2, Calendar, MapPin } from 'lucide-react';
+import { CheckCircle2, Calendar, MapPin, Flag } from 'lucide-react';
 
-export default function VouchCard({ vouch }) {
+export default function VouchCard({ vouch, onFlag }) {
   const formattedDate = vouch.createdAt
     ? new Date(vouch.createdAt).toLocaleDateString('en-IN', {
         day: 'numeric',
@@ -30,9 +30,21 @@ export default function VouchCard({ vouch }) {
           </p>
         </div>
 
-        <span className="text-[10px] text-gray-400 font-medium">
-          {formattedDate}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-gray-400 font-medium">
+            {formattedDate}
+          </span>
+          {onFlag && (
+            <button
+              type="button"
+              onClick={() => onFlag(vouch)}
+              className="text-gray-300 hover:text-amber-600 p-0.5 rounded transition-colors"
+              title="Report or flag this vouch"
+            >
+              <Flag className="w-3 h-3" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Job Done & Month */}

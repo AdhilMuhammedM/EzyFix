@@ -4,6 +4,8 @@ import {
   LANGUAGES,
   QUALIFICATION_TYPES,
   VOUCH_TAGS,
+  ISSUE_TAGS,
+  FLAG_REASONS,
   MAX_DOCUMENT_SIZE_BYTES,
 } from './config.js';
 
@@ -267,6 +269,113 @@ export function validateVouch(data) {
   // consent line
   if (!data.consent) {
     errors.consent = 'You must consent to displaying your name and area on this profile.';
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+  };
+}
+
+/**
+ * Validates critical / bad review input data.
+ *
+ * @param {Object} data
+ * @returns {{ isValid: boolean, errors: Record<string, string> }}
+ */
+export function validateIssueReview(data) {
+  const errors = {};
+
+  // reviewerName: 2 to 60 chars
+  const name = data.reviewerName ? data.reviewerName.trim() : '';
+  if (!name || name.length < 2 || name.length > 60) {
+    errors.reviewerName = 'Your name must be between 2 and 60 characters.';
+  }
+
+  // reviewerPhone: valid 10-digit mobile
+  if (!isValidPhone(data.reviewerPhone)) {
+    errors.reviewerPhone = 'A valid 10-digit phone number is required.';
+  }
+
+  // reviewerArea: one of AREAS
+  if (!data.reviewerArea || !AREAS.includes(data.reviewerArea)) {
+    errors.reviewerArea = 'Please select your area.';
+  }
+
+  // jobDone: 3 to 80 chars
+  const job = data.jobDone ? data.jobDone.trim() : '';
+  if (!job || job.length < 3 || job.length > 80) {
+    errors.jobDone = 'Job description must be between 3 and 80 characters.';
+  }
+
+  // jobMonth: YYYY-MM, not in future
+  if (!data.jobMonth || !/^\d{4}-(0[1-9]|1[0-2])$/.test(data.jobMonth)) {
+    errors.jobMonth = 'Please select a valid job month (YYYY-MM).';
+  } else {
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    if (data.jobMonth > currentMonth) {
+      errors.jobMonth = 'Job month cannot be in the future.';
+    }
+  }
+
+  // issueTags: array from ISSUE_TAGS, at least 1, max 5
+  if (!Array.isArray(data.issueTags) || data.issueTags.length === 0) {
+    errors.issueTags = 'Please select at least one issue tag.';
+  } else if (data.issueTags.length > 5) {
+    errors.issueTags = 'Maximum 5 issue tags allowed.';
+  } else {
+    const invalidTag = data.issueTags.find((t) => !ISSUE_TAGS.includes(t));
+    if (invalidTag) {
+      errors.issueTags = `Invalid tag: ${invalidTag}.`;
+    }
+  }
+
+  // feedback: 20 to 500 chars
+  const fb = data.feedback ? data.feedback.trim() : '';
+  if (!fb || fb.length < 20 || fb.length > 500) {
+    errors.feedback = 'Detailed feedback must be between 20 and 500 characters.';
+  }
+
+  // consent line
+  if (!data.consent) {
+    errors.consent = 'You must consent to displaying your name and area on this profile.';
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+  };
+}
+
+/**
+ * Validates a flag submission.
+ *
+ * @param {Object} data
+ * @returns {{ isValid: boolean, errors: Record<string, string> }}
+ */
+export function validateFlag(data) {
+  const errors = {};
+
+  if (!data.targetType || (data.targetType !== 'pro' && data.targetType !== 'vouch')) {
+    errors.targetType = "Target must be either 'pro' or 'vouch'.";
+  }
+
+  if (!data.targetId || typeof data.targetId !== 'string' || !data.targetId.trim()) {
+    errors.targetId = 'Target ID is required.';
+  }
+
+  if (!data.reason || !FLAG_REASONS.includes(data.reason)) {
+    errors.reason = 'Please select a valid reason for flagging.';
+  }
+
+  const details = data.details ? data.details.trim() : '';
+  if (!details || details.length < 10 || details.length > 500) {
+    errors.details = 'Explanation must be between 10 and 500 characters.';
+  }
+
+  if (!isValidPhone(data.reporterPhone)) {
+    errors.reporterPhone = 'A valid 10-digit phone number is required for verification.';
   }
 
   return {

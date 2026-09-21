@@ -32,7 +32,7 @@ export default function FilterBar({
   };
 
   return (
-    <div className="bg-white border-b border-[#E6E6E0] p-4 space-y-3.5 shadow-sm">
+    <div className="bg-white border-b lg:border lg:rounded-card border-[#E6E6E0] p-4 space-y-3.5 shadow-sm">
       {/* Search Input */}
       <div className="relative">
         <label htmlFor="search-input" className="sr-only">Search professional by name</label>
@@ -57,9 +57,10 @@ export default function FilterBar({
         )}
       </div>
 
-      {/* Service Pills (Scrollable horizontally) */}
+      {/* Service Pills (Scrollable horizontally on mobile, wrapping cleanly on desktop sidebar) */}
       <div>
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none no-scrollbar">
+        <label className="hidden lg:block text-xs font-semibold text-[#072339] mb-1.5">Trade / Service</label>
+        <div className="flex items-center gap-1.5 overflow-x-auto lg:flex-wrap lg:overflow-visible pb-1 scrollbar-none no-scrollbar">
           <button
             type="button"
             onClick={() => onFilterChange({ ...filters, service: 'all' })}

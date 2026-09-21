@@ -13,6 +13,8 @@ import {
   validateVouch,
   validateCustomer,
   isValidPhone,
+  validateIssueReview,
+  validateFlag,
 } from '../lib/validation.js';
 
 function getAdminPasscode() {
@@ -61,6 +63,15 @@ export function sanitizeVouch(vouch) {
 }
 
 /**
+ * Sanitizes an Issue review for public views (removes reviewerPhone)
+ */
+export function sanitizeIssueReview(issue) {
+  if (!issue) return null;
+  const { reviewerPhone, ...publicFields } = issue;
+  return publicFields;
+}
+
+/**
  * Sanitizes a Qualification object based on scope
  */
 export function sanitizeQualification(qual, scope = 'public') {
@@ -79,7 +90,10 @@ function loadDb() {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.DB);
     if (raw) {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      if (!parsed.issues) parsed.issues = [];
+      if (!parsed.flags) parsed.flags = [];
+      return parsed;
     }
   } catch (err) {
     console.error('Failed to parse localStorage db:', err);
@@ -703,4 +717,233 @@ export async function resetDemoData(adminPasscode) {
   verifyAdmin(adminPasscode);
   const seed = generateSeedData();
   saveDb(seed);
+}
+
+// -------------------------------------------------------------
+// BAD REVIEWS / ISSUES
+// -------------------------------------------------------------
+
+/**
+ * Adds an issue / critical review for a pro after contact verification.
+ * @param {Object} data
+ * @returns {Promise<Object>}
+ */
+export async function addIssueReview(data) {
+  const validation = validateIssueReview(data);
+  if (!validation.isValid) {
+    const firstMsg = Object.values(validation.errors)[0];
+    throw new Error(firstMsg || 'Invalid review details.');
+  }
+
+  const db = loadDb();
+  const pro = db.pros.find((p) => p.id === data.proId);
+  if (!pro) {
+    throw new Error('Professional not found.');
+  }
+
+  const rPhone = data.reviewerPhone.trim();
+
+  // Contact must exist
+  const contact = db.contacts.find(
+    (c) => c.proId === data.proId && c.customerPhone === rPhone
+  );
+  if (!contact) {
+    throw new Error('You can report an issue after you contact this pro through EzyFix.');
+  }
+
+  if (rPhone === pro.phone) {
+    throw new Error('You cannot review your own profile.');
+  }
+
+  const existingActive = db.issues.find(
+    (i) => i.proId === data.proId && i.reviewerPhone === rPhone && i.status === 'active'
+  );
+  if (existingActive) {
+    throw new Error('You have already submitted an active review for this professional.');
+  }
+
+  const newIssue = {
+    id: generateId('issue'),
+    proId: data.proId,
+    contactId: contact.id,
+    reviewerName: data.reviewerName.trim(),
+    reviewerPhone: rPhone,
+    reviewerArea: data.reviewerArea,
+    jobDone: data.jobDone.trim(),
+    jobMonth: data.jobMonth,
+    issueTags: Array.isArray(data.issueTags) ? [...data.issueTags] : [],
+    feedback: data.feedback.trim(),
+    status: 'active',
+    removedReason: null,
+    createdAt: new Date().toISOString(),
+  };
+
+  db.issues.push(newIssue);
+  saveDb(db);
+
+  return sanitizeIssueReview(newIssue);
+}
+
+/**
+ * Lists public issues / bad reviews for a pro, sorted newest first.
+ * @param {string} proId
+ * @param {{ includeRemoved?: boolean }} options
+ * @returns {Promise<Array>}
+ */
+export async function listIssuesForPro(proId, { includeRemoved = false } = {}) {
+  const db = loadDb();
+  let list = (db.issues || []).filter((i) => i.proId === proId);
+
+  if (!includeRemoved) {
+    list = list.filter((i) => i.status === 'active');
+  }
+
+  list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  return list.map(sanitizeIssueReview);
+}
+
+/**
+ * Internal helper to retrieve raw issues with reviewer phone
+ */
+export async function listRawIssuesForPro(proId) {
+  const db = loadDb();
+  return (db.issues || []).filter((i) => i.proId === proId && i.status === 'active');
+}
+
+/**
+ * Removes an issue review (Admin only).
+ * @param {string} adminPasscode
+ * @param {string} id
+ * @param {string} reason
+ * @returns {Promise<Object>}
+ */
+export async function removeIssueReview(adminPasscode, id, reason = '') {
+  verifyAdmin(adminPasscode);
+  const db = loadDb();
+  const index = (db.issues || []).findIndex((i) => i.id === id);
+  if (index === -1) {
+    throw new Error('Issue review not found.');
+  }
+
+  const issue = db.issues[index];
+  issue.status = 'removed';
+  issue.removedReason = reason ? reason.trim() : 'Removed by administrator.';
+
+  db.issues[index] = issue;
+  saveDb(db);
+
+  return sanitizeIssueReview(issue);
+}
+
+// -------------------------------------------------------------
+// FLAGGING & MODERATION
+// -------------------------------------------------------------
+
+/**
+ * Flags a pro or vouch for administrator investigation.
+ * @param {Object} data
+ * @returns {Promise<Object>}
+ */
+export async function flagEntity(data) {
+  const validation = validateFlag(data);
+  if (!validation.isValid) {
+    const firstMsg = Object.values(validation.errors)[0];
+    throw new Error(firstMsg || 'Invalid flag report details.');
+  }
+
+  const db = loadDb();
+
+  // Check target exists
+  if (data.targetType === 'pro') {
+    const pro = db.pros.find((p) => p.id === data.targetId);
+    if (!pro) throw new Error('Professional not found.');
+  } else if (data.targetType === 'vouch') {
+    const vouch = db.vouches.find((v) => v.id === data.targetId);
+    if (!vouch) throw new Error('Vouch not found.');
+  }
+
+  const newFlag = {
+    id: generateId('flag'),
+    targetType: data.targetType,
+    targetId: data.targetId,
+    reason: data.reason,
+    details: data.details.trim(),
+    reporterPhone: data.reporterPhone.trim(),
+    status: 'pending', // pending | resolved | dismissed
+    resolutionNote: null,
+    createdAt: new Date().toISOString(),
+    resolvedAt: null,
+  };
+
+  db.flags.push(newFlag);
+  saveDb(db);
+
+  return newFlag;
+}
+
+/**
+ * Lists all flags for the Admin dashboard.
+ * @param {string} adminPasscode
+ * @returns {Promise<Array>}
+ */
+export async function listFlagsForAdmin(adminPasscode) {
+  verifyAdmin(adminPasscode);
+  const db = loadDb();
+
+  return (db.flags || []).map((f) => {
+    let targetName = 'Unknown';
+    let targetContext = '';
+
+    if (f.targetType === 'pro') {
+      const pro = db.pros.find((p) => p.id === f.targetId);
+      if (pro) {
+        targetName = pro.fullName;
+        targetContext = `${pro.service} · ${pro.homeArea}`;
+      }
+    } else if (f.targetType === 'vouch') {
+      const vouch = db.vouches.find((v) => v.id === f.targetId);
+      if (vouch) {
+        const pro = db.pros.find((p) => p.id === vouch.proId);
+        targetName = `Vouch by ${vouch.voucherName}`;
+        targetContext = `For ${pro ? pro.fullName : 'Pro'}: "${vouch.feedback.substring(0, 60)}..."`;
+      }
+    }
+
+    return {
+      ...f,
+      targetName,
+      targetContext,
+    };
+  }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+}
+
+/**
+ * Resolves or dismisses a flag (Admin only).
+ * @param {string} adminPasscode
+ * @param {string} id
+ * @param {'resolved' | 'dismissed'} decision
+ * @param {string} note
+ * @returns {Promise<Object>}
+ */
+export async function resolveFlag(adminPasscode, id, decision, note = '') {
+  verifyAdmin(adminPasscode);
+  if (decision !== 'resolved' && decision !== 'dismissed') {
+    throw new Error("Decision must be 'resolved' or 'dismissed'.");
+  }
+
+  const db = loadDb();
+  const index = (db.flags || []).findIndex((f) => f.id === id);
+  if (index === -1) {
+    throw new Error('Flag not found.');
+  }
+
+  const flag = db.flags[index];
+  flag.status = decision;
+  flag.resolutionNote = note ? note.trim() : null;
+  flag.resolvedAt = new Date().toISOString();
+
+  db.flags[index] = flag;
+  saveDb(db);
+
+  return flag;
 }

@@ -5,6 +5,8 @@ import {
   validateQualification,
   validateCustomer,
   validateVouch,
+  validateIssueReview,
+  validateFlag,
 } from '../src/lib/validation.js';
 
 describe('Validation Logic', () => {
@@ -127,6 +129,75 @@ describe('Validation Logic', () => {
       });
       expect(res.isValid).toBe(false);
       expect(res.errors.consent).toBeDefined();
+    });
+  });
+
+  describe('Issue Review Validation', () => {
+    const validIssue = {
+      reviewerName: 'Priya Mohan',
+      reviewerPhone: '9847112233',
+      reviewerArea: 'Market Road',
+      jobDone: 'Kitchen sink pipe repair',
+      jobMonth: '2024-02',
+      issueTags: ['Work not completed', 'Overcharged / Unfair price'],
+      feedback: 'The technician did not complete the job and charged twice the agreed rate.',
+      consent: true,
+    };
+
+    it('validates a compliant critical review', () => {
+      const res = validateIssueReview(validIssue);
+      expect(res.isValid).toBe(true);
+    });
+
+    it('rejects issue review without issue tags', () => {
+      const res = validateIssueReview({ ...validIssue, issueTags: [] });
+      expect(res.isValid).toBe(false);
+      expect(res.errors.issueTags).toBeDefined();
+    });
+
+    it('rejects issue review with feedback under 20 chars', () => {
+      const res = validateIssueReview({ ...validIssue, feedback: 'Bad work done.' });
+      expect(res.isValid).toBe(false);
+      expect(res.errors.feedback).toBeDefined();
+    });
+
+    it('rejects issue review without consent', () => {
+      const res = validateIssueReview({ ...validIssue, consent: false });
+      expect(res.isValid).toBe(false);
+      expect(res.errors.consent).toBeDefined();
+    });
+  });
+
+  describe('Flag Validation', () => {
+    const validFlag = {
+      targetType: 'pro',
+      targetId: 'pro-1',
+      reason: 'Safety or conduct concern',
+      details: 'Professional displayed aggressive behavior at customer site.',
+      reporterPhone: '9847112233',
+    };
+
+    it('validates a compliant flag submission', () => {
+      const res = validateFlag(validFlag);
+      expect(res.isValid).toBe(true);
+    });
+
+    it('rejects invalid targetType', () => {
+      const res = validateFlag({ ...validFlag, targetType: 'qualification' });
+      expect(res.isValid).toBe(false);
+      expect(res.errors.targetType).toBeDefined();
+    });
+
+    it('rejects details shorter than 10 characters', () => {
+      const res = validateFlag({ ...validFlag, details: 'bad' });
+      expect(res.isValid).toBe(false);
+      expect(res.errors.details).toBeDefined();
+    });
+
+    it('rejects invalid reporter phone', () => {
+      const res = validateFlag({ ...validFlag, reporterPhone: '12345' });
+      expect(res.isValid).toBe(false);
+      expect(res.errors.reporterPhone).toBeDefined();
     });
   });
 });

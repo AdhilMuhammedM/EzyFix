@@ -25,5 +25,12 @@ export const removeVouch = activeRepo.removeVouch;
 export const getCallNumber = activeRepo.getCallNumber;
 export const listAllVouchesForAdmin = activeRepo.listAllVouchesForAdmin;
 export const resetDemoData = activeRepo.resetDemoData;
+export const addIssueReview = activeRepo.addIssueReview;
+export const listIssuesForPro = activeRepo.listIssuesForPro;
+export const listRawIssuesForPro = activeRepo.listRawIssuesForPro;
+export const removeIssueReview = activeRepo.removeIssueReview;
+export const flagEntity = activeRepo.flagEntity;
+export const listFlagsForAdmin = activeRepo.listFlagsForAdmin;
+export const resolveFlag = activeRepo.resolveFlag;
 
 export default activeRepo;

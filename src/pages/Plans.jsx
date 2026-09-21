@@ -103,23 +103,23 @@ export default function Plans() {
         )}
       </div>
 
-      <div className="p-4 space-y-4 max-w-lg mx-auto">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-5xl mx-auto w-full">
         {/* Title Header */}
         <div className="text-center space-y-1.5 pt-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 border border-amber-200 rounded-full text-amber-900 text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5 text-[#FDB60C]" />
             <span>Simple, Transparent Pricing</span>
           </div>
-          <h1 className="font-serif text-2xl font-bold text-[#072339]">
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#072339]">
             Choose Your Plan
           </h1>
-          <p className="text-xs text-gray-600 max-w-sm mx-auto leading-relaxed">
+          <p className="text-xs sm:text-sm text-gray-600 max-w-lg mx-auto leading-relaxed">
             Only subscribed Pro pros are ranked and listed first. Trust and skill levels are strictly earned through honest work.
           </p>
         </div>
 
         {/* Demo Disclaimer */}
-        <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl text-[11px] text-amber-900 flex items-start gap-2">
+        <div className="p-3.5 bg-amber-50/70 border border-amber-200/80 rounded-xl text-xs text-amber-900 flex items-start gap-2 max-w-3xl mx-auto">
           <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
           <p className="leading-relaxed">
             <strong>Demo environment:</strong> No real payment, card details, or payment provider are involved. Pro activation is instant for demonstration purposes.
@@ -128,7 +128,7 @@ export default function Plans() {
 
         {/* Active Pro Status Banner (if signed in and Pro) */}
         {isPro && pro && (
-          <div className="p-4 bg-[#072339] text-white rounded-xl shadow-sm flex items-center justify-between">
+          <div className="p-4 bg-[#072339] text-white rounded-xl shadow-sm flex items-center justify-between max-w-3xl mx-auto w-full">
             <div className="space-y-0.5">
               <div className="flex items-center gap-1.5">
                 <ProBadge size="sm" />
@@ -148,9 +148,9 @@ export default function Plans() {
         )}
 
         {/* Plan Cards Grid */}
-        <div className="space-y-4 pt-1">
+        <div className="grid md:grid-cols-2 gap-6 items-stretch pt-2">
           {/* FREE PLAN CARD */}
-          <div className={`bg-white rounded-card border ${!isPro && pro ? 'border-gray-400 ring-1 ring-gray-400' : 'border-[#E6E6E0]'} p-5 shadow-sm space-y-4`}>
+          <div className={`bg-white rounded-card border ${!isPro && pro ? 'border-gray-400 ring-1 ring-gray-400' : 'border-[#E6E6E0]'} p-6 shadow-sm flex flex-col justify-between h-full space-y-4`}>
             <div className="flex items-start justify-between">
               <div>
                 <span className="text-[10px] uppercase tracking-wider font-bold text-gray-500">
@@ -202,7 +202,7 @@ export default function Plans() {
           </div>
 
           {/* PRO PLAN CARD */}
-          <div className={`bg-white rounded-card border-2 ${isPro ? 'border-[#072339]' : 'border-[#FDB60C]'} p-5 shadow-md space-y-4 relative overflow-hidden`}>
+          <div className={`bg-white rounded-card border-2 ${isPro ? 'border-[#072339]' : 'border-[#FDB60C]'} p-6 shadow-md flex flex-col justify-between h-full space-y-4 relative overflow-hidden`}>
             {/* Top highlight bar */}
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#FDB60C]" />
 
@@ -308,24 +308,24 @@ export default function Plans() {
             Frequently Asked Questions
           </h3>
 
-          <div className="space-y-2 text-xs text-gray-600">
-            <div className="p-3 bg-white rounded-xl border border-[#E6E6E0] space-y-1">
+          <div className="grid sm:grid-cols-3 gap-4 text-xs text-gray-600">
+            <div className="p-4 bg-white rounded-xl border border-[#E6E6E0] space-y-1.5 shadow-xs">
               <h4 className="font-semibold text-[#072339]">Does Pro guarantee #1 rank?</h4>
-              <p className="leading-relaxed">
+              <p className="leading-relaxed text-gray-600">
                 No. Pro determines who is ranked and displayed above free pros. Among Pro pros, rankings are decided by your verified community vouches and approved skill credentials.
               </p>
             </div>
 
-            <div className="p-3 bg-white rounded-xl border border-[#E6E6E0] space-y-1">
+            <div className="p-4 bg-white rounded-xl border border-[#E6E6E0] space-y-1.5 shadow-xs">
               <h4 className="font-semibold text-[#072339]">Can a new pro with 0 vouches rank well?</h4>
-              <p className="leading-relaxed">
+              <p className="leading-relaxed text-gray-600">
                 Yes! With Pro, adding verified qualifications (trade licences, ITI diplomas, training certificates) gives you skill points immediately, helping you rank alongside established pros.
               </p>
             </div>
 
-            <div className="p-3 bg-white rounded-xl border border-[#E6E6E0] space-y-1">
+            <div className="p-4 bg-white rounded-xl border border-[#E6E6E0] space-y-1.5 shadow-xs">
               <h4 className="font-semibold text-[#072339]">Can I cancel my Pro subscription?</h4>
-              <p className="leading-relaxed">
+              <p className="leading-relaxed text-gray-600">
                 Yes. You can cancel anytime from your Manage dashboard. When cancelled, your profile moves to the free plan.
               </p>
             </div>

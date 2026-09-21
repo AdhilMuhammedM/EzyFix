@@ -162,4 +162,100 @@ describe('Local Repository & Privacy Rules', () => {
     const fetched = await repo.getPro('pro-1');
     expect(fetched.proUntil).toBeNull();
   });
+
+  it('addIssueReview() blocks submission without prior contact and allows it with contact', async () => {
+    const custPhone = '9847223344';
+
+    // Without contact: throws
+    await expect(
+      repo.addIssueReview({
+        proId: 'pro-1',
+        reviewerName: 'Suresh P',
+        reviewerPhone: custPhone,
+        reviewerArea: 'Lake View',
+        jobDone: 'Tap repair',
+        jobMonth: '2024-02',
+        issueTags: ['Work not completed'],
+        feedback: 'Technician left before repairing the broken valve pipe.',
+        consent: true,
+      })
+    ).rejects.toThrow('You can report an issue after you contact this pro through EzyFix.');
+
+    // Log contact
+    await repo.addContact({
+      proId: 'pro-1',
+      customerName: 'Suresh P',
+      customerPhone: custPhone,
+      customerArea: 'Lake View',
+    });
+
+    // With contact: succeeds
+    const issue = await repo.addIssueReview({
+      proId: 'pro-1',
+      reviewerName: 'Suresh P',
+      reviewerPhone: custPhone,
+      reviewerArea: 'Lake View',
+      jobDone: 'Tap repair',
+      jobMonth: '2024-02',
+      issueTags: ['Work not completed', 'Property damage'],
+      feedback: 'Technician left before repairing the broken valve pipe and cracked a tile.',
+      consent: true,
+    });
+
+    expect(issue).toBeDefined();
+    expect(issue.reviewerPhone).toBeUndefined(); // private
+
+    const proIssues = await repo.listIssuesForPro('pro-1');
+    expect(proIssues.length).toBe(1);
+    expect(proIssues[0].reviewerName).toBe('Suresh P');
+    expect(proIssues[0].issueTags).toContain('Property damage');
+  });
+
+  it('flagEntity() records flags and allows admin to review and resolve/dismiss them', async () => {
+    // 1. Flag a pro
+    const proFlag = await repo.flagEntity({
+      targetType: 'pro',
+      targetId: 'pro-2',
+      reason: 'Safety or conduct concern',
+      details: 'Unprofessional behavior during service call at residence.',
+      reporterPhone: '9847334455',
+    });
+    expect(proFlag.status).toBe('pending');
+
+    // 2. Flag a vouch
+    const vouchFlag = await repo.flagEntity({
+      targetType: 'vouch',
+      targetId: 'v-1',
+      reason: 'Fraudulent or fake vouch',
+      details: 'This vouch appears fabricated by a family member.',
+      reporterPhone: '9847334455',
+    });
+    expect(vouchFlag.status).toBe('pending');
+
+    // 3. Admin lists flags
+    const adminFlags = await repo.listFlagsForAdmin(DEFAULT_ADMIN_PASSCODE);
+    expect(adminFlags.length).toBeGreaterThanOrEqual(2);
+
+    const foundProFlag = adminFlags.find((f) => f.id === proFlag.id);
+    expect(foundProFlag.targetName).toBe('Biju Thomas');
+
+    // 4. Resolve pro flag
+    const resolved = await repo.resolveFlag(
+      DEFAULT_ADMIN_PASSCODE,
+      proFlag.id,
+      'resolved',
+      'Investigated and warned pro.'
+    );
+    expect(resolved.status).toBe('resolved');
+    expect(resolved.resolutionNote).toBe('Investigated and warned pro.');
+
+    // 5. Dismiss vouch flag
+    const dismissed = await repo.resolveFlag(
+      DEFAULT_ADMIN_PASSCODE,
+      vouchFlag.id,
+      'dismissed',
+      'Insufficient evidence.'
+    );
+    expect(dismissed.status).toBe('dismissed');
+  });
 });

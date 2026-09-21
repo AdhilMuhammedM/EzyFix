@@ -38,7 +38,7 @@ export default {
         'card': '12px',
       },
       maxWidth: {
-        'app': '480px',
+        'app': '1280px',
       },
     },
   },

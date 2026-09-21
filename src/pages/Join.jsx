@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Wrench,
   Copy,
   Check,
   AlertTriangle,
@@ -211,100 +210,106 @@ export default function Join() {
 
   // REGISTRATION FORM
   return (
-    <div className="flex-1 p-4 pb-16 space-y-4">
+    <div className="flex-1 p-4 sm:p-6 lg:p-8 pb-20 max-w-4xl mx-auto w-full space-y-6">
       {/* Header Info */}
-      <div className="bg-white rounded-card border border-[#E6E6E0] p-5 shadow-sm space-y-2">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[#072339] text-[#FDB60C] flex items-center justify-center font-bold">
-            <Wrench className="w-4 h-4" />
+      <div className="bg-white rounded-card border border-[#E6E6E0] p-6 shadow-sm space-y-2">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#072339] p-1.5 shadow-sm flex items-center justify-center flex-shrink-0">
+            <img src="/logo-icon.png" alt="EzyFix" className="w-full h-full object-contain rounded" />
           </div>
-          <h1 className="font-serif text-lg font-bold text-[#072339]">
+          <h1 className="font-serif text-xl sm:text-2xl font-bold text-[#072339]">
             Join as a Service Professional
           </h1>
         </div>
-        <p className="text-xs text-gray-600 leading-relaxed">
+        <p className="text-xs sm:text-sm text-gray-600 leading-relaxed max-w-2xl">
           Create your professional profile on EzyFix. No real payments, no bidding wars, and no star rating penalties. Add verified trade qualifications anytime to improve your skill level.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-card border border-[#E6E6E0] p-5 shadow-sm space-y-4">
+      <form onSubmit={handleSubmit} className="bg-white rounded-card border border-[#E6E6E0] p-6 shadow-sm space-y-5">
         {errors.form && (
           <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg">
             {errors.form}
           </div>
         )}
 
-        {/* Full Name */}
-        <div>
-          <label className="block text-xs font-semibold text-[#072339] mb-1">
-            Full name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            required
-            maxLength={60}
-            value={formData.fullName}
-            onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-            placeholder="e.g. Ramesh K"
-            className="w-full px-3 py-2 text-xs bg-[#F8F8F6] border border-[#E6E6E0] rounded-lg focus:outline-none focus:border-[#072339]"
-          />
-          {errors.fullName && <p className="text-[11px] text-red-600 mt-1">{errors.fullName}</p>}
+        {/* Name & Phone in 2-Column Grid */}
+        <div className="grid sm:grid-cols-2 gap-4">
+          {/* Full Name */}
+          <div>
+            <label className="block text-xs font-semibold text-[#072339] mb-1">
+              Full name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              required
+              maxLength={60}
+              value={formData.fullName}
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+              placeholder="e.g. Ramesh K"
+              className="w-full px-3 py-2 text-xs bg-[#F8F8F6] border border-[#E6E6E0] rounded-lg focus:outline-none focus:border-[#072339]"
+            />
+            {errors.fullName && <p className="text-[11px] text-red-600 mt-1">{errors.fullName}</p>}
+          </div>
+
+          {/* Mobile Phone */}
+          <div>
+            <label className="block text-xs font-semibold text-[#072339] mb-1">
+              10-digit mobile number <span className="text-red-500">*</span>{' '}
+              <span className="text-gray-400 font-normal">(kept private until contact)</span>
+            </label>
+            <input
+              type="tel"
+              required
+              maxLength={10}
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '') })}
+              placeholder="e.g. 9876543210"
+              className="w-full px-3 py-2 text-xs bg-[#F8F8F6] border border-[#E6E6E0] rounded-lg focus:outline-none focus:border-[#072339]"
+            />
+            {errors.phone && <p className="text-[11px] text-red-600 mt-1">{errors.phone}</p>}
+          </div>
         </div>
 
-        {/* Mobile Phone */}
-        <div>
-          <label className="block text-xs font-semibold text-[#072339] mb-1">
-            10-digit mobile number <span className="text-red-500">*</span>{' '}
-            <span className="text-gray-400 font-normal">(kept private until contact)</span>
-          </label>
-          <input
-            type="tel"
-            required
-            maxLength={10}
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '') })}
-            placeholder="e.g. 9876543210"
-            className="w-full px-3 py-2 text-xs bg-[#F8F8F6] border border-[#E6E6E0] rounded-lg focus:outline-none focus:border-[#072339]"
-          />
-          {errors.phone && <p className="text-[11px] text-red-600 mt-1">{errors.phone}</p>}
-        </div>
+        {/* Service & Home Area in 2-Column Grid */}
+        <div className="grid sm:grid-cols-2 gap-4">
+          {/* Service */}
+          <div>
+            <label className="block text-xs font-semibold text-[#072339] mb-1">
+              Primary trade / service <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.service}
+              onChange={(e) => setFormData({ ...formData, service: e.target.value })}
+              className="w-full px-3 py-2 text-xs bg-[#F8F8F6] border border-[#E6E6E0] rounded-lg focus:outline-none focus:border-[#072339]"
+            >
+              {SERVICES.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+            {errors.service && <p className="text-[11px] text-red-600 mt-1">{errors.service}</p>}
+          </div>
 
-        {/* Service */}
-        <div>
-          <label className="block text-xs font-semibold text-[#072339] mb-1">
-            Primary trade / service <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={formData.service}
-            onChange={(e) => setFormData({ ...formData, service: e.target.value })}
-            className="w-full px-3 py-2 text-xs bg-[#F8F8F6] border border-[#E6E6E0] rounded-lg focus:outline-none focus:border-[#072339]"
-          >
-            {SERVICES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-          {errors.service && <p className="text-[11px] text-red-600 mt-1">{errors.service}</p>}
-        </div>
-
-        {/* Home Area */}
-        <div>
-          <label className="block text-xs font-semibold text-[#072339] mb-1">
-            Home area / base <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={formData.homeArea}
-            onChange={(e) => handleHomeAreaChange(e.target.value)}
-            className="w-full px-3 py-2 text-xs bg-[#F8F8F6] border border-[#E6E6E0] rounded-lg focus:outline-none focus:border-[#072339]"
-          >
-            {AREAS.map((a) => (
-              <option key={a} value={a}>
-                {a}
-              </option>
-            ))}
-          </select>
-          {errors.homeArea && <p className="text-[11px] text-red-600 mt-1">{errors.homeArea}</p>}
+          {/* Home Area */}
+          <div>
+            <label className="block text-xs font-semibold text-[#072339] mb-1">
+              Home area / base <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.homeArea}
+              onChange={(e) => handleHomeAreaChange(e.target.value)}
+              className="w-full px-3 py-2 text-xs bg-[#F8F8F6] border border-[#E6E6E0] rounded-lg focus:outline-none focus:border-[#072339]"
+            >
+              {AREAS.map((a) => (
+                <option key={a} value={a}>
+                  {a}
+                </option>
+              ))}
+            </select>
+            {errors.homeArea && <p className="text-[11px] text-red-600 mt-1">{errors.homeArea}</p>}
+          </div>
         </div>
 
         {/* Areas Served */}
@@ -313,7 +318,7 @@ export default function Join() {
             Areas served <span className="text-red-500">*</span>{' '}
             <span className="text-gray-400 font-normal">(must include home area)</span>
           </label>
-          <div className="grid grid-cols-2 gap-2 pt-1">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 pt-1">
             {AREAS.map((area) => {
               const isChecked = formData.areasServed.includes(area);
               const isHome = area === formData.homeArea;
@@ -322,7 +327,7 @@ export default function Join() {
                   key={area}
                   className={`flex items-center gap-2 p-2 rounded-lg border text-xs cursor-pointer transition-colors ${
                     isChecked
-                      ? 'bg-white border-[#072339] text-[#072339] font-medium'
+                      ? 'bg-white border-[#072339] text-[#072339] font-medium shadow-xs'
                       : 'bg-[#F8F8F6] border-[#E6E6E0] text-gray-500'
                   }`}
                 >

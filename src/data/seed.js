@@ -696,5 +696,7 @@ export function generateSeedData() {
     qualifications,
     contacts,
     vouches,
+    issues: [],
+    flags: [],
   };
 }

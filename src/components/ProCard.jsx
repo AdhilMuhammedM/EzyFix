@@ -47,8 +47,8 @@ export default function ProCard({ pro, rankIndex }) {
   const isPro = Boolean(pro.isPro);
 
   return (
-    <article className="bg-white rounded-card border border-[#E6E6E0] p-4 shadow-sm hover:shadow-md transition-shadow relative">
-      <Link to={`/pro/${pro.id}`} className="block group">
+    <article className="bg-white rounded-card border border-[#E6E6E0] p-4 shadow-sm hover:shadow-md transition-shadow relative flex flex-col justify-between h-full">
+      <Link to={`/pro/${pro.id}`} className="block group flex-1 flex flex-col justify-between">
         <div className="flex items-start gap-3">
           {/* Avatar + Rank Badge (Only for Pro pros with valid rankIndex) */}
           <div className="relative flex-shrink-0">

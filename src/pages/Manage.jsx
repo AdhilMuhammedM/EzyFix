@@ -165,6 +165,8 @@ export default function Manage() {
 
   const handleLogout = () => {
     localStorage.removeItem(STORAGE_KEYS.MANAGE);
+    localStorage.removeItem('ezyfix_demo_session');
+    window.dispatchEvent(new Event('ezyfix-session-update'));
     setPro(null);
     setCredentials({ phone: '', manageCode: '' });
   };
@@ -230,7 +232,7 @@ export default function Manage() {
   // 1. AUTHENTICATION GATE
   if (!pro) {
     return (
-      <div className="flex-1 p-5 flex flex-col justify-center max-w-sm mx-auto">
+      <div className="flex-1 p-5 flex flex-col justify-center max-w-md mx-auto w-full py-8">
         <div className="bg-white rounded-card border border-[#E6E6E0] p-6 shadow-sm space-y-4">
           <div className="w-12 h-12 rounded-xl bg-[#072339] text-[#FDB60C] flex items-center justify-center mx-auto">
             <KeyRound className="w-6 h-6" />
@@ -310,7 +312,7 @@ export default function Manage() {
   const expertProgressPercent = Math.min(100, Math.round((skill.points / 2) * 100));
 
   return (
-    <div className="flex-1 p-4 pb-16 space-y-4">
+    <div className="flex-1 p-4 sm:p-6 lg:p-8 pb-20 max-w-5xl mx-auto w-full space-y-6">
       {/* Dashboard Top Header */}
       <div className="bg-white rounded-card border border-[#E6E6E0] p-5 shadow-sm space-y-3">
         <div className="flex items-start justify-between">

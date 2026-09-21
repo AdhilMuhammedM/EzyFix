@@ -2,13 +2,17 @@ import React from 'react';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
 import ProBadge from '../src/components/ProBadge.jsx';
 import WhyRankPanel from '../src/components/WhyRankPanel.jsx';
 import ProCard from '../src/components/ProCard.jsx';
 import HowRankingWorksModal from '../src/components/HowRankingWorksModal.jsx';
-import { PRO_PRICE_INR_PER_MONTH } from '../src/lib/config.js';
+import ProProfile from '../src/pages/ProProfile.jsx';
+import IssueReviewModal from '../src/components/IssueReviewModal.jsx';
+import FlagModal from '../src/components/FlagModal.jsx';
+import { PRO_PRICE_INR_PER_MONTH, DEFAULT_ADMIN_PASSCODE } from '../src/lib/config.js';
+import { resetDemoData, addContact, addIssueReview } from '../src/data/repo.js';
 
 describe('BRICK 13B: Pro Plan UI Components', () => {
   let container;
@@ -211,5 +215,148 @@ describe('BRICK 13B: Pro Plan UI Components', () => {
     // For Pro pro
     const proVisible = true ? vouches : vouches.slice(-1);
     expect(proVisible.length).toBe(3);
+  });
+
+  it('ProProfile renders correctly for Pro member with vouches, Free member with vouches, and New member with 0 vouches', async () => {
+    localStorage.clear();
+    await resetDemoData(DEFAULT_ADMIN_PASSCODE);
+
+    // 1. Pro member with vouches (Anil Varghese, pro-1)
+    await act(async () => {
+      root.render(
+        <MemoryRouter key="pro-1" initialEntries={['/pro/pro-1']}>
+          <Routes>
+            <Route path="/pro/:id" element={<ProProfile />} />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 20));
+    });
+    expect(container.textContent).toContain('Anil Varghese');
+    expect(container.textContent).toContain('Community Vouches (5)');
+
+    // 2. Free member with vouches (Biju Thomas, pro-2)
+    await act(async () => {
+      root.render(
+        <MemoryRouter key="pro-2" initialEntries={['/pro/pro-2']}>
+          <Routes>
+            <Route path="/pro/:id" element={<ProProfile />} />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 20));
+    });
+    expect(container.textContent).toContain('Biju Thomas');
+    expect(container.textContent).toContain('Community Vouches (2)');
+    expect(container.textContent).toContain('1 more vouch is visible when this pro is on the Pro plan.');
+
+    // 3. New member with 0 vouches (Jomon K, pro-4)
+    await act(async () => {
+      root.render(
+        <MemoryRouter key="pro-4" initialEntries={['/pro/pro-4']}>
+          <Routes>
+            <Route path="/pro/:id" element={<ProProfile />} />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 20));
+    });
+    expect(container.textContent).toContain('Jomon K');
+    expect(container.textContent).toContain('No vouches yet');
+  });
+
+  it('IssueReviewModal and FlagModal render with required options and notices', async () => {
+    // 1. IssueReviewModal when customer not identified
+    await act(async () => {
+      root.render(
+        <IssueReviewModal
+          isOpen={true}
+          onClose={() => {}}
+          pro={{ id: 'pro-1', fullName: 'Anil Varghese' }}
+        />
+      );
+    });
+    expect(container.textContent).toContain('Report an Issue or Bad Experience');
+    expect(container.textContent).toContain('Contact required first');
+
+    // 2. FlagModal for professional
+    await act(async () => {
+      root.render(
+        <FlagModal
+          isOpen={true}
+          onClose={() => {}}
+          targetType="pro"
+          targetId="pro-1"
+          targetTitle="Anil Varghese (Plumber)"
+        />
+      );
+    });
+    expect(container.textContent).toContain('Flag Professional');
+    expect(container.textContent).toContain('Safety or conduct concern');
+    expect(container.textContent).toContain('Suspicious or fake qualification');
+
+    // 3. FlagModal for vouch
+    await act(async () => {
+      root.render(
+        <FlagModal
+          isOpen={true}
+          onClose={() => {}}
+          targetType="vouch"
+          targetId="v-1"
+          targetTitle="Vouch by Latha Devi"
+        />
+      );
+    });
+    expect(container.textContent).toContain('Flag Suspicious Vouch');
+  });
+
+  it('ProProfile displays Reported Issues when issues are present for pro', async () => {
+    localStorage.clear();
+    await resetDemoData(DEFAULT_ADMIN_PASSCODE);
+
+    // Log contact and add an issue review for Anil (pro-1)
+    await addContact({
+      proId: 'pro-1',
+      customerName: 'Meera N',
+      customerPhone: '9847998877',
+      customerArea: 'Lake View',
+    });
+
+    await addIssueReview({
+      proId: 'pro-1',
+      reviewerName: 'Meera N',
+      reviewerPhone: '9847998877',
+      reviewerArea: 'Lake View',
+      jobDone: 'Kitchen sink pipe repair',
+      jobMonth: '2024-02',
+      issueTags: ['Work not completed', 'Overcharged / Unfair price'],
+      feedback: 'The technician charged 500 extra and did not seal the joint properly.',
+      consent: true,
+    });
+
+    await act(async () => {
+      root.render(
+        <MemoryRouter key="pro-1-with-issue" initialEntries={['/pro/pro-1']}>
+          <Routes>
+            <Route path="/pro/:id" element={<ProProfile />} />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 25));
+    });
+
+    expect(container.textContent).toContain('Reported Issues & Bad Experiences (1)');
+    expect(container.textContent).toContain('Meera N');
+    expect(container.textContent).toContain('Work not completed');
+    expect(container.textContent).toContain('Overcharged / Unfair price');
+    expect(container.textContent).toContain('The technician charged 500 extra');
   });
 });

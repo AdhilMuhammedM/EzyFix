@@ -27,6 +27,24 @@ export const VOUCH_TAGS = [
   'Would hire again',
 ];
 
+export const ISSUE_TAGS = [
+  'Work not completed',
+  'Overcharged / Unfair price',
+  'Showed up late / No-show',
+  'Poor communication',
+  'Property damage',
+  'Unprofessional conduct',
+];
+
+export const FLAG_REASONS = [
+  'Suspicious or fake qualification',
+  'Safety or conduct concern',
+  'No-show / Abandoned work',
+  'Fraudulent or fake vouch',
+  'Spam or fake profile',
+  'Other',
+];
+
 export const TRUST_LEVELS = [
   { minVouches: 3, level: 2, label: 'Highly trusted', bg: '#D6E3D3' },
   { minVouches: 1, level: 1, label: 'Community vouched', bg: '#F8E3A6' },

@@ -11,6 +11,9 @@ import {
   MessageSquare,
   Shield,
   Eye,
+  Flag,
+  ThumbsDown,
+  ShieldAlert,
 } from 'lucide-react';
 import Toast from '../components/Toast.jsx';
 import {
@@ -19,6 +22,9 @@ import {
   listAllVouchesForAdmin,
   removeVouch,
   resetDemoData,
+  listFlagsForAdmin,
+  resolveFlag,
+  removeIssueReview,
 } from '../data/repo.js';
 import { DEFAULT_ADMIN_PASSCODE, QUALIFICATION_TYPES } from '../lib/config.js';
 
@@ -27,9 +33,10 @@ export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authError, setAuthError] = useState('');
 
-  const [activeTab, setActiveTab] = useState('qualifications'); // 'qualifications' | 'vouches' | 'tools'
+  const [activeTab, setActiveTab] = useState('qualifications'); // 'qualifications' | 'vouches' | 'flags' | 'tools'
   const [pendingQuals, setPendingQuals] = useState([]);
   const [allVouches, setAllVouches] = useState([]);
+  const [flags, setFlags] = useState([]);
   const [loading, setLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
@@ -67,12 +74,34 @@ export default function Admin() {
     try {
       const quals = await listPendingQualifications(adminCode);
       const vList = await listAllVouchesForAdmin(adminCode);
+      const fList = await listFlagsForAdmin(adminCode);
       setPendingQuals(quals);
       setAllVouches(vList);
+      setFlags(fList);
     } catch (err) {
       setToastMessage(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDismissFlag = async (id) => {
+    try {
+      await resolveFlag(passcode, id, 'dismissed', 'Dismissed by admin.');
+      setToastMessage('Flag dismissed.');
+      loadAdminData();
+    } catch (err) {
+      setToastMessage(err.message);
+    }
+  };
+
+  const handleResolveFlag = async (id) => {
+    try {
+      await resolveFlag(passcode, id, 'resolved', 'Investigated and resolved by admin.');
+      setToastMessage('Flag marked as resolved.');
+      loadAdminData();
+    } catch (err) {
+      setToastMessage(err.message);
     }
   };
 
@@ -133,7 +162,7 @@ export default function Admin() {
   // 1. PASSCODE GATE
   if (!isAuthenticated) {
     return (
-      <div className="flex-1 p-5 flex flex-col justify-center max-w-sm mx-auto">
+      <div className="flex-1 p-5 flex flex-col justify-center max-w-md mx-auto w-full py-8">
         <div className="bg-white rounded-card border border-[#E6E6E0] p-6 shadow-sm space-y-4">
           <div className="w-12 h-12 rounded-xl bg-[#072339] text-[#FDB60C] flex items-center justify-center mx-auto">
             <Lock className="w-6 h-6" />
@@ -187,7 +216,7 @@ export default function Admin() {
 
   // 2. ADMIN CONSOLE
   return (
-    <div className="flex-1 p-4 pb-16 space-y-4">
+    <div className="flex-1 p-4 sm:p-6 lg:p-8 pb-20 max-w-6xl mx-auto w-full space-y-6">
       {/* Console Top Header */}
       <div className="bg-white rounded-card border border-[#E6E6E0] p-4 shadow-sm flex items-center justify-between">
         <div>
@@ -232,7 +261,20 @@ export default function Admin() {
           }`}
         >
           <MessageSquare className="w-3.5 h-3.5" />
-          <span>All Vouches ({allVouches.length})</span>
+          <span>Vouches ({allVouches.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('flags')}
+          className={`flex-1 py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1.5 ${
+            activeTab === 'flags'
+              ? 'bg-[#072339] text-white shadow-sm font-semibold'
+              : 'text-gray-600 hover:text-[#072339]'
+          }`}
+        >
+          <Flag className="w-3.5 h-3.5 text-amber-400" />
+          <span>Flags ({flags.filter((f) => f.status === 'pending').length})</span>
         </button>
 
         <button
@@ -245,7 +287,7 @@ export default function Admin() {
           }`}
         >
           <RotateCcw className="w-3.5 h-3.5" />
-          <span>Demo Tools</span>
+          <span>Tools</span>
         </button>
       </div>
 
@@ -397,6 +439,99 @@ export default function Admin() {
               <span>Reset Demo Data Now</span>
             </button>
           </div>
+        </section>
+      )}
+
+      {/* TAB 3: FLAGS & REPORTS */}
+      {activeTab === 'flags' && (
+        <section className="space-y-3">
+          {flags.length > 0 ? (
+            flags.map((flag) => (
+              <div
+                key={flag.id}
+                className="bg-white rounded-card border border-[#E6E6E0] p-4 shadow-sm space-y-3"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                          flag.targetType === 'pro'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-purple-100 text-purple-800'
+                        }`}
+                      >
+                        {flag.targetType === 'pro' ? 'Pro Profile' : 'Vouch'}
+                      </span>
+                      <h3 className="font-serif text-sm font-bold text-[#072339]">
+                        {flag.targetName}
+                      </h3>
+                    </div>
+                    {flag.targetContext && (
+                      <p className="text-[11px] text-gray-500 mt-0.5">{flag.targetContext}</p>
+                    )}
+                  </div>
+
+                  <span
+                    className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                      flag.status === 'pending'
+                        ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                        : flag.status === 'resolved'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-gray-100 text-gray-700'
+                    }`}
+                  >
+                    {flag.status.toUpperCase()}
+                  </span>
+                </div>
+
+                <div className="p-2.5 bg-amber-50/70 border border-amber-200/80 rounded-lg space-y-1 text-xs">
+                  <div className="flex items-center justify-between text-amber-950 font-semibold">
+                    <span>Reason: {flag.reason}</span>
+                    <span className="text-[10px] text-amber-700 font-normal">
+                      Reporter: {flag.reporterPhone}
+                    </span>
+                  </div>
+                  <p className="text-amber-900 text-xs italic leading-relaxed">
+                    "{flag.details}"
+                  </p>
+                </div>
+
+                {flag.resolutionNote && (
+                  <p className="text-[11px] text-gray-500 italic">
+                    Note: {flag.resolutionNote}
+                  </p>
+                )}
+
+                {flag.status === 'pending' && (
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => handleDismissFlag(flag.id)}
+                      className="flex-1 py-1.5 px-3 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium text-xs transition-colors"
+                    >
+                      Dismiss Flag
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleResolveFlag(flag.id)}
+                      className="flex-1 py-1.5 px-3 bg-[#072339] hover:bg-[#0D3352] text-white rounded-lg font-semibold text-xs transition-colors shadow"
+                    >
+                      Resolve & Close
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <div className="bg-white rounded-card border border-[#E6E6E0] p-8 text-center space-y-2 text-xs text-gray-500">
+              <Shield className="w-8 h-8 text-gray-300 mx-auto" />
+              <h3 className="font-serif text-sm font-semibold text-[#072339]">
+                No flags or reports
+              </h3>
+              <p>Community reports and flagged pros/vouches will appear here for review.</p>
+            </div>
+          )}
         </section>
       )}
 
