@@ -65,7 +65,7 @@ We built EzyFix with Google Antigravity's agent. We wrote a full product spec (`
 
 ### GitHub repo link of the project
 
-[Link of the github repository](https://github.com/github_user_name/repo_name)
+[Link of the github repository](https://github.com/AdhilMuhammedM/EzyFix.git)
 
 ## Proof of Google AI Usage
 
