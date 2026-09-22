@@ -73,7 +73,7 @@ Screenshots of Antigravity agent sessions, prompts and plans are in the `/proofs
 
 ## Screenshots
 
-Add project screenshots in `/screenshots` folder. Suggested set:
+
 
 | Screen | File |
 | --- | --- |
